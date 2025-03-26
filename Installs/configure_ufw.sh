@@ -34,30 +34,26 @@ install_ufw() {
   echo "UFW successfully installed"
 }
 
-# Check if UFW is installed
-if ! command -v ufw &> /dev/null; then
-  install_ufw
-fi
-
-# Reset and configure UFW
-echo "Configuring firewall rules..."
-{
+# Main configuration function
+configure_firewall() {
+  echo "Configuring firewall rules..."
+  
   # Reset and enable UFW
   ufw --force reset
-  ufw enable
+  echo "y" | ufw enable
 
   # Default policies
   ufw default deny incoming
   ufw default allow outgoing
 
-  # 1. SSH Access (Restricted to jump server)
+  # SSH Access (Restricted to jump server)
   ufw allow from $JUMP_SERVER_IP to any port 22 proto tcp
 
-  # 2. Web Services
+  # Web Services
   ufw allow 80/tcp
   ufw allow 443/tcp
 
-  # 3. Email Services
+  # Email Services
   ufw allow 25/tcp     # SMTP
   ufw allow 465/tcp    # SMTPS
   ufw allow 587/tcp    # Submission
@@ -66,16 +62,24 @@ echo "Configuring firewall rules..."
   ufw allow 110/tcp    # POP3
   ufw allow 995/tcp    # POP3S
 
-  # 4. DNS
+  # DNS
   ufw allow 53/tcp
   ufw allow 53/udp
 
-  # 5. ISPmanager
+  # ISPmanager
   ufw allow 1500/tcp
 
   # Enable all rules
-  ufw enable
-} > /dev/null 2>&1
+  echo "y" | ufw enable
+}
+
+# Check if UFW is installed
+if ! command -v ufw &> /dev/null; then
+  install_ufw
+fi
+
+# Configure firewall
+configure_firewall
 
 # Display results
 echo -e "\n\033[1mUFW Firewall Rules Configured:\033[0m"
